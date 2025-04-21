@@ -1,0 +1,8 @@
+project:
+  title: "assignment21"
+  output-dir: docs
+  type: website
+  
+format:
+  html:
+    self-contained: true

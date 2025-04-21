@@ -1,0 +1,54 @@
+---
+title: "Daily Assignment 21"
+subtitle: "Ecosystem Science and Sustainability 330"
+author: Jake Matullo
+format: html
+execute:
+  echoe: true
+---
+```{r}
+library(tidyverse)
+library(dataRetrieval)
+library(zoo)
+library(tsibble)
+library(ggplot2)
+library(feasts)
+library(fabletools)
+```
+
+```{r}
+# Example: Cache la Poudre River at Mouth (USGS site 06752260)
+poudre_flow <- readNWISdv(siteNumber = "06752260",    # Download data from USGS for site 06752260
+                          parameterCd = "00060",      # Parameter code 00060 = discharge in cfs)
+                          startDate = "2013-01-01",   # Set the start date
+                          endDate = "2023-12-31") |>  # Set the end date
+  renameNWISColumns() |>                              # Rename columns to standard names (e.g., "Flow", "Date")
+  mutate(Date = yearmonth(Date)) |>                   # Convert daily Date values into a year-month format (e.g., "2023 Jan")
+  group_by(Date) |>                                   # Group the data by the new monthly Date
+  summarise(Flow = mean(Flow))                       # Calculate the average daily flow for each month
+```
+
+```{r}
+as_tsibble(poudre_flow) %>%
+  gg_subseries() + 
+  labs(title = "Monthly Streamflow Patterns", y = "Flow (cfs)", x = "Year") + 
+  theme_minimal()
+```
+In this model, streamflow peaks around May and June, with an odd peak exhibited in early September. The season is the year and the subseries, aka the months, make up it.
+
+```{r}
+poudre_flow$Date <- as.Date(poudre_flow$Date)
+```
+
+```{r}
+flow_ts <- ts(poudre_flow$Flow, start = c(2013, 1), frequency = 12)
+```
+
+```{r}
+stl_decomp <- stl(flow_ts, s.window = "periodic")
+```
+
+```{r}
+plot(stl_decomp)
+```
+The trend (measuring the river's memory) peaks at around 2015, but declines later on and remains relatively consistent after 2018. The seasonal data (the measurement of regular, periodic fluctuations in data) spikes at relatively consistent intervals around halfway through each year.
