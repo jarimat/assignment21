@@ -51,4 +51,4 @@ stl_decomp <- stl(flow_ts, s.window = "periodic")
 ```{r}
 plot(stl_decomp)
 ```
-The trend (measuring the river's memory) peaks at around 2015, but declines later on and remains relatively consistent after 2018. The seasonal data (the measurement of regular, periodic fluctuations in data) spikes at relatively consistent intervals around halfway through each year.
+The trend (referring to the measurement of the river's "memory") peaks at around 2015, but declines later on and remains relatively consistent after 2018. The seasonal data (the measurement of regular, periodic fluctuations in data) spikes at relatively consistent intervals around halfway through each year.
