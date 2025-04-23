@@ -91,8 +91,26 @@ calibration_table <- modeltime_calibrate(models_tbl, testing, quiet = FALSE)
 ```
 
 ```{r}
+poudre_flow <- poudre_flow %>%
+  mutate(Date = as.Date(Date))
+```
+
+```{r}
+testing <- testing %>%
+  mutate(Date = as.Date(Date))
+```
+
+```{r}
 forecast_tbl <- models_tbl %>%
-  modeltime_forecast(h = "12 months", actual_data = poudre_flow)
+  modeltime_forecast(
+    h = "12 months",
+    actual_data = poudre_flow
+  )
+```
+
+```{r}
+forecast_tbl %>%
+  plot_modeltime_forecast(.interactive = FALSE)
 ```
 
 ```{r}
