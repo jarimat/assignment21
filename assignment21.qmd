@@ -14,6 +14,12 @@ library(tsibble)
 library(ggplot2)
 library(feasts)
 library(fabletools)
+library(tsibble)
+library(rsample)
+library(recipes)
+library(parsnip)
+library(purrr)
+library(modeltime)
 ```
 
 ```{r}
@@ -52,3 +58,65 @@ stl_decomp <- stl(flow_ts, s.window = "periodic")
 plot(stl_decomp)
 ```
 The trend (referring to the measurement of the river's "memory") peaks at around 2015, but declines later on and remains relatively consistent after 2018. The seasonal data (the measurement of regular, periodic fluctuations in data) spikes at relatively consistent intervals around halfway through each year.
+
+**Assignment 22 Begins Below**
+
+```{r}
+split <- initial_time_split(data = poudre_tibble, prop = 0.8)
+#the command "time_series_split" doesn't actually exist FYI
+
+training <- training(split)
+testing <- testing(split)
+```
+
+```{r}
+arima_reg <- arima_reg() %>%
+  set_engine("auto_arima")
+
+prophet_reg <- prophet_reg() %>%
+  set_engine("prophet")
+```
+
+```{r}
+mods <- list(arima_reg, prophet_reg)
+```
+
+```{r}
+models <- map(mods, ~ fit(.x, Flow ~ Date, data = training))
+```
+```{r}
+models_tbl <- as_modeltime_table(models)
+
+calibration_table <- modeltime_calibrate(models_tbl, testing, quiet = FALSE)
+```
+
+```{r}
+forecast_tbl <- models_tbl %>%
+  modeltime_forecast(h = "12 months", actual_data = poudre_flow)
+```
+
+```{r}
+future_poudre_flow <- readNWISdv(siteNumber = "06752260",    # Download data from USGS for site 06752260
+                          parameterCd = "00060",      # Parameter code 00060 = discharge in cfs)
+                          startDate = "2024-01-01",   # Set the start date
+                          endDate = "2025-01-01") %>% # Set the end date
+  renameNWISColumns() %>%                              # Rename columns to standard names (e.g., "Flow", "Date")
+  mutate(Date = yearmonth(Date)) %>%                   # Convert daily Date values into a year-month format (e.g., "2023 Jan")
+  group_by(Date) %>%                      # Group the data by the new monthly Date
+  summarise(Flow = mean(Flow))                       # Calculate the average daily flow for each month
+```
+```{r}
+as_tsibble(future_poudre_flow) %>%
+  gg_subseries() + 
+  labs(title = "Monthly Streamflow Patterns", y = "Flow (cfs)", x = "Month") + 
+  theme_minimal()
+```
+```{r}
+
+```
+
+```{r}
+rec <- recipe(Flow ~ Date, data = training(splits))
+```
+
+
