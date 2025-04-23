@@ -62,7 +62,7 @@ The trend (referring to the measurement of the river's "memory") peaks at around
 **Assignment 22 Begins Below**
 
 ```{r}
-split <- initial_time_split(data = poudre_tibble, prop = 0.8)
+split <- initial_time_split(data = poudre_flow, prop = 0.8)
 #the command "time_series_split" doesn't actually exist FYI
 
 training <- training(split)
@@ -111,12 +111,4 @@ as_tsibble(future_poudre_flow) %>%
   labs(title = "Monthly Streamflow Patterns", y = "Flow (cfs)", x = "Month") + 
   theme_minimal()
 ```
-```{r}
-
-```
-
-```{r}
-rec <- recipe(Flow ~ Date, data = training(splits))
-```
-
 
